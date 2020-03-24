@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>启动项目</title>
+    <link th:href="@{/bootstrap-4.4.1/css/bootstrap.min.css}" rel="stylesheet">
+    <script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script th:src="@{/bootstrap-4.4.1/js/bootstrap.min.js}" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <div style="margin-top: 80px;" id="info-show">
+
+    </div>
+    <button type="button" class="btn btn-outline-primary" name="erp-bridge">发布ERP-Bridge</button>
+    <button type="button" class="btn btn-outline-secondary" name="bigdata">发布Bigdata</button>
+    <button type="button" class="btn btn-outline-success" name="bigdata-api">发布Bigdata-api</button>
+
+    <div class="input-group" style="margin-top: 15px;">
+        <div class="input-group-prepend">
+            <span class="input-group-text">信息：</span>
+        </div>
+        <textarea class="form-control" aria-label="With textarea" id="text-area" style="height: 250px;">
+
+        </textarea>
+    </div>
+</div>
+
+<script>
+    var sockOpen = false;
+    function socket(){
+        var sock = new SockJS('/test');
+
+        sock.onopen = function() {
+            sockOpen = true;
+            console.log('open');
+            // sock.send('test');
+        };
+
+        sock.onmessage = function(e) {
+            console.log('message', e.data);
+            var message = e.data;
+            if(message == "clear"){
+                $('#text-area').val('');
+            }else if(message == "end"){
+                $('.btn').prop('disabled', false);
+            }else{
+                $('#text-area').val($('#text-area').val() + message);
+            }
+            document.getElementById('text-area').scrollTop = document.getElementById('text-area').scrollHeight
+        };
+
+        sock.onclose = function() {
+            console.log('close');
+        };
+        return sock;
+    }
+
+
+    function info(){
+        var html = '<div class="alert alert-warning alert-dismissible fade show" role="alert">\n' +
+            '  正在执行，请稍等.\n' +
+            '  <button type="button" class="close" data-dismiss="alert" aria-label="Close">\n' +
+            '    <span class="close-span" aria-hidden="true">&times;</span>\n' +
+            '  </button>\n' +
+            '</div>';
+        $('#info-show').append(html);
+        setTimeout(function () {
+            $('.close-span').click();
+        }, 5000)
+    }
+
+    $(function () {
+        var sock = socket();
+        $('.btn').on('click', function () {
+            $('#text-area').val('');
+            $('.btn').prop('disabled', true);
+            info();
+            sock.send($(this).attr("name"));
+        })
+    })
+</script>
+</body>
+</html>
